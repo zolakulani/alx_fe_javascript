@@ -5,6 +5,59 @@ let quotes = JSON.parse(localStorage.getItem('quotes')) || [
   { text: "Your time is limited, don't waste it living someone else's life.", category: "life" }
 ];
 
+let selectedCategory = localStorage.getItem('lastSelectedCategory') || 'all';
+
+// Then modify the filterQuotes function:
+function filterQuotes() {
+  selectedCategory = document.getElementById('categoryFilter').value;
+  
+  // Save selected category to localStorage
+  localStorage.setItem('lastSelectedCategory', selectedCategory);
+  
+  if (selectedCategory === 'all') {
+    showRandomQuote();
+    return;
+  }
+  
+  const filteredQuotes = quotes.filter(quote => quote.category === selectedCategory);
+  if (filteredQuotes.length === 0) {
+    document.getElementById('quoteDisplay').textContent = "No quotes in this category";
+    return;
+  }
+  
+  const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+  const quote = filteredQuotes[randomIndex];
+  document.getElementById('quoteDisplay').innerHTML = `<p>"${quote.text}"</p><p>- ${quote.category}</p>`;
+}
+
+// Update the populateCategories function:
+function populateCategories() {
+  const categoryFilter = document.getElementById('categoryFilter');
+  const categories = ['all'];
+  
+  // Get all unique categories
+  const uniqueCategories = [...new Set(quotes.map(quote => quote.category))];
+  categories.push(...uniqueCategories);
+  
+  // Clear existing options except the first one
+  while (categoryFilter.options.length > 1) {
+    categoryFilter.remove(1);
+  }
+  
+  // Add new options
+  uniqueCategories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.appendChild(option);
+  });
+
+  // Restore last selected category
+  if (selectedCategory && categories.includes(selectedCategory)) {
+    categoryFilter.value = selectedCategory;
+  }
+}
+
 // Save quotes to localStorage
 function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
