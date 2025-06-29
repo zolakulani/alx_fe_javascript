@@ -7,6 +7,99 @@ let quotes = JSON.parse(localStorage.getItem('quotes')) || [
 
 let selectedCategory = localStorage.getItem('lastSelectedCategory') || 'all';
 
+// Add these constants near the top of the file
+const API_URL = 'https://jsonplaceholder.typicode.com/posts'; // Mock API
+const SYNC_INTERVAL = 30000; // 30 seconds
+
+// Add these functions for server synchronization
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) throw new Error('Server error');
+    const data = await response.json();
+    // Transform mock API data to our quote format
+    return data.map(item => ({
+      text: item.title,
+      category: item.body.split(' ')[0] || 'general'
+    }));
+  } catch (error) {
+    console.error('Failed to fetch quotes:', error);
+    return null;
+  }
+}
+
+async function postQuotesToServer(quotes) {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(quotes),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to post quotes:', error);
+    return false;
+  }
+}
+
+async function syncQuotes() {
+  // Fetch server quotes
+  const serverQuotes = await fetchQuotesFromServer();
+  if (!serverQuotes) return false;
+
+  // Conflict resolution - merge strategies
+  const localQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
+  
+  // Create a merged set of quotes (simple merge by unique text)
+  const mergedQuotes = [...localQuotes];
+  const localTexts = new Set(localQuotes.map(q => q.text));
+  
+  serverQuotes.forEach(quote => {
+    if (!localTexts.has(quote.text)) {
+      mergedQuotes.push(quote);
+    }
+  });
+
+  // Update local storage
+  quotes = mergedQuotes;
+  localStorage.setItem('quotes', JSON.stringify(quotes));
+  
+  // Update UI if needed
+  populateCategories();
+  
+  // Show notification
+  showNotification('Quotes synchronized with server');
+  return true;
+}
+
+// Add notification function
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+// Add this to your init() function:
+function init() {
+  // ... existing init code ...
+
+  // Set up periodic sync
+  setInterval(syncQuotes, SYNC_INTERVAL);
+  
+  // Manual sync button
+  document.getElementById('manualSync').addEventListener('click', async () => {
+    const success = await syncQuotes();
+    showNotification(success ? 'Sync successful!' : 'Sync failed');
+  });
+}
+
 // Then modify the filterQuotes function:
 function filterQuotes() {
   selectedCategory = document.getElementById('categoryFilter').value;
