@@ -53,6 +53,7 @@ function importFromJsonFile(event) {
       quotes = importedQuotes;
       saveQuotes();
       showRandomQuote();
+      populateCategories(); // Update categories after import
       alert('Quotes imported successfully!');
     } catch (error) {
       alert('Error importing quotes: ' + error.message);
@@ -75,22 +76,22 @@ function addQuote() {
     textInput.value = '';
     categoryInput.value = '';
     showRandomQuote();
+    populateCategories(); // Update categories after adding
   } else {
     alert('Please enter both quote text and category');
   }
 }
 
 // Function to populate category filter dropdown
-function populateCategoryFilter() {
+function populateCategories() {
   const categoryFilter = document.getElementById('categoryFilter');
   const categories = ['all'];
   
-  // Get all unique categories
-  quotes.forEach(quote => {
-    if (!categories.includes(quote.category)) {
-      categories.push(quote.category);
-    }
-  });
+  // Get all unique categories using map
+  const uniqueCategories = quotes.map(quote => quote.category)
+                                .filter((value, index, self) => self.indexOf(value) === index);
+  
+  categories.push(...uniqueCategories);
   
   // Clear existing options except the first one
   while (categoryFilter.options.length > 1) {
@@ -104,11 +105,21 @@ function populateCategoryFilter() {
     option.textContent = category;
     categoryFilter.appendChild(option);
   });
+
+  // Restore last selected category
+  const lastCategory = localStorage.getItem('lastSelectedCategory');
+  if (lastCategory && categories.includes(lastCategory)) {
+    categoryFilter.value = lastCategory;
+  }
 }
 
 // Function to filter quotes by category
 function filterQuotes() {
   const category = document.getElementById('categoryFilter').value;
+  
+  // Save selected category to localStorage
+  localStorage.setItem('lastSelectedCategory', category);
+  
   if (category === 'all') {
     showRandomQuote();
     return;
@@ -138,7 +149,7 @@ function init() {
   }
 
   // Populate category filter
-  populateCategoryFilter();
+  populateCategories();
 
   // Add event listeners
   document.getElementById('newQuote').addEventListener('click', showRandomQuote);
