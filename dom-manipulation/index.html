@@ -4,6 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dynamic Quote Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    #quoteDisplay {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      min-height: 100px;
+    }
+    button, input {
+      padding: 8px;
+      margin: 5px;
+    }
+    .import-export {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #eee;
+    }
+    #importFile {
+      display: none;
+    }
+    label[for="importFile"] {
+      padding: 8px 12px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
   <h1>Dynamic Quote Generator</h1>
