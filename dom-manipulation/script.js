@@ -29,10 +29,11 @@ function showRandomQuote() {
 // Function to export quotes to JSON file
 function exportToJsonFile() {
   const dataStr = JSON.stringify(quotes, null, 2);
-  const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const dataUrl = URL.createObjectURL(dataBlob);
   
   const linkElement = document.createElement('a');
-  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('href', dataUrl);
   linkElement.setAttribute('download', 'quotes.json');
   linkElement.click();
 }
@@ -60,27 +61,6 @@ function importFromJsonFile(event) {
   reader.readAsText(file);
 }
 
-// Function to create the add quote form
-function createAddQuoteForm() {
-  const formContainer = document.createElement('div');
-  formContainer.innerHTML = `
-    <input type="text" id="newQuoteText" placeholder="Enter new quote">
-    <input type="text" id="newQuoteCategory" placeholder="Enter category">
-    <button id="addQuoteBtn">Add Quote</button>
-    <div class="import-export">
-      <button id="exportBtn">Export Quotes</button>
-      <input type="file" id="importFile" accept=".json">
-      <label for="importFile">Import Quotes</label>
-    </div>
-  `;
-  document.body.appendChild(formContainer);
-
-  // Add event listeners
-  document.getElementById('addQuoteBtn').addEventListener('click', addQuote);
-  document.getElementById('exportBtn').addEventListener('click', exportToJsonFile);
-  document.getElementById('importFile').addEventListener('change', importFromJsonFile);
-}
-
 // Function to add a new quote
 function addQuote() {
   const textInput = document.getElementById('newQuoteText');
@@ -100,10 +80,53 @@ function addQuote() {
   }
 }
 
+// Function to populate category filter dropdown
+function populateCategoryFilter() {
+  const categoryFilter = document.getElementById('categoryFilter');
+  const categories = ['all'];
+  
+  // Get all unique categories
+  quotes.forEach(quote => {
+    if (!categories.includes(quote.category)) {
+      categories.push(quote.category);
+    }
+  });
+  
+  // Clear existing options except the first one
+  while (categoryFilter.options.length > 1) {
+    categoryFilter.remove(1);
+  }
+  
+  // Add new options
+  categories.slice(1).forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.appendChild(option);
+  });
+}
+
+// Function to filter quotes by category
+function filterQuotes() {
+  const category = document.getElementById('categoryFilter').value;
+  if (category === 'all') {
+    showRandomQuote();
+    return;
+  }
+  
+  const filteredQuotes = quotes.filter(quote => quote.category === category);
+  if (filteredQuotes.length === 0) {
+    document.getElementById('quoteDisplay').textContent = "No quotes in this category";
+    return;
+  }
+  
+  const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+  const quote = filteredQuotes[randomIndex];
+  document.getElementById('quoteDisplay').innerHTML = `<p>"${quote.text}"</p><p>- ${quote.category}</p>`;
+}
+
 // Initialize the application
 function init() {
-  createAddQuoteForm();
-  
   // Show last viewed quote if available in sessionStorage
   const lastQuote = sessionStorage.getItem('lastViewedQuote');
   if (lastQuote) {
@@ -114,8 +137,14 @@ function init() {
     showRandomQuote();
   }
 
-  // Add event listener for the show new quote button
+  // Populate category filter
+  populateCategoryFilter();
+
+  // Add event listeners
   document.getElementById('newQuote').addEventListener('click', showRandomQuote);
+  document.getElementById('manualSync').addEventListener('click', () => {
+    alert('Sync with server would happen here (simulated)');
+  });
 }
 
 // Start the application when DOM is loaded
