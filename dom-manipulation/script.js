@@ -44,6 +44,7 @@ async function postQuotesToServer(quotes) {
   }
 }
 
+// Update the syncQuotes function to include the exact notification message
 async function syncQuotes() {
   // Fetch server quotes
   const serverQuotes = await fetchQuotesFromServer();
@@ -69,10 +70,16 @@ async function syncQuotes() {
   // Update UI if needed
   populateCategories();
   
-  // Show notification
-  showNotification('Quotes synchronized with server');
+  // Show notification with exact required message
+  showNotification('Quotes synced with server!');
   return true;
 }
+
+// Update the manual sync notification to match
+document.getElementById('manualSync').addEventListener('click', async () => {
+  const success = await syncQuotes();
+  showNotification(success ? 'Quotes synced with server!' : 'Sync failed');
+});
 
 // Add notification function
 function showNotification(message) {
